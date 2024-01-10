@@ -10,32 +10,24 @@ Decide where you want to place the internsctl executable. Common choices include
 Copy internsctl to the Chosen Directory:
 Assuming your internsctl script is named internsctl:
 
-bash
-Copy code to terminal
 sudo cp internsctl /usr/local/bin
 This command copies the internsctl script to /usr/local/bin and makes it available system-wide.
 
 Set Permissions:
 Ensure that the copied script has execute permissions:
 
-bash
-Copy code to terminal
 sudo chmod +x /usr/local/bin/internsctl
 This command grants execute permissions to all users.
 
 Verify Installation:
 Open a new terminal window and run:
 
-bash
-Copy code to terminal
 internsctl --version
 It should display the version of internsctl, indicating that the command is now available.
 
 (Optional) Remove Local Copies:
 If you had a local copy of internsctl in the directory where you were working, you can remove it to avoid confusion:
 
-bash
-Copy code to terminal
 rm internsctl
 Now, internsctl should be accessible as a built-in command system-wide. Users can use it from any directory without specifying the path.
 
@@ -51,29 +43,22 @@ To add a manual page for internsctl using the display_manual function, you can c
 Create the Manual Page Content:
 The display_manual function contains the content of the manual page. You can redirect this content to a file. Let's assume the manual page is stored in a file named internsctl.1:
 
-bash
-Copy code to terminal
 ./internsctl --help > internsctl.1
+or copy the file in repo
 Move the Manual Page to the Appropriate Directory:
 You should move the manual page file to the system directory where manual pages are stored. Common choices are /usr/share/man/man1/ or /usr/local/share/man/man1/. Use sudo to gain the necessary privileges:
 
-bash
-Copy code to terminal
 sudo cp internsctl.1 /usr/share/man/man1/
 If you encounter permission issues, adjust the command accordingly.
 
 Update the Manual Page Database:
 After moving the manual page, update the manual page database. This step might vary depending on your Linux distribution. For many systems, you can use the mandb command:
 
-bash
-Copy code to terminal
 sudo mandb
 
 Verify the Manual Page:
 You can now view the manual page using the man command. For example:
 
-bash
-Copy code to terminal
 man internsctl
 This should display the manual page for internsctl containing the information from the display_manual function.
 
