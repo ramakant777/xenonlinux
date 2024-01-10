@@ -1,0 +1,182 @@
+#!/bin/bash
+
+# Define version
+VERSION="v0.1.0"
+
+# Function to display manual page
+display_manual() {
+    cat <<-MANUAL
+    internsctl(1)                           User Commands                          internsctl(1)
+
+    NAME
+           internsctl - Custom Linux command for various operations
+
+    SYNOPSIS
+           internsctl [COMMAND] [OPTIONS]
+
+    DESCRIPTION
+           internsctl is a custom Linux command that provides various operations for system management.
+
+    COMMANDS
+           cpu getinfo          Get CPU information (similar to lscpu)
+           memory getinfo       Get memory information (similar to free)
+           user create          Create a new user with login access and home directory
+           user list            List all regular users
+           user list --sudo-only List users with sudo permissions
+           file getinfo         Get information about a file
+
+    OPTIONS
+           --help               Display help and usage information
+           --version            Display the version of internsctl
+
+    EXAMPLES
+           internsctl cpu getinfo
+           internsctl memory getinfo
+           internsctl user create <username>
+           internsctl user list
+           internsctl user list --sudo-only
+           internsctl file getinfo <file-name>
+           internsctl file getinfo --size <file-name>
+           internsctl file getinfo --permissions <file-name>
+           internsctl file getinfo --owner <file-name>
+           internsctl file getinfo --last-modified <file-name>
+MANUAL
+}
+
+# Function to get CPU information
+get_cpu_info() {
+    lscpu
+}
+
+# Function to get memory information
+get_memory_info() {
+    free
+}
+
+# Function to create a new user or list users
+handle_user_command() {
+    local sub_command="$1"
+    local username="$2"
+
+    if [ -z "$sub_command" ]; then
+        echo "Error: Missing sub-command. Usage: internsctl user <create|list> [options]"
+        exit 1
+    fi
+
+    case "$sub_command" in
+        create)
+            if [ -z "$username" ]; then
+                echo "Error: Missing username. Usage: internsctl user create <username>"
+                exit 1
+            fi
+            # Create a new user with home directory
+            sudo useradd -m "$username" && sudo passwd "$username"
+            ;;
+        list)
+            local sudo_only=false
+
+            # Check for --sudo-only option
+            if [ "$username" == "--sudo-only" ]; then
+                sudo_only=true
+            fi
+
+            # List users with or without sudo permissions
+            if "$sudo_only"; then
+                getent group sudo | cut -d: -f4 | tr ',' '\n'
+            else
+                getent passwd | cut -d: -f1
+            fi
+            ;;
+        *)
+            echo "Error: Unknown sub-command '$sub_command'. Use 'internsctl user --help' for usage."
+            exit 1
+            ;;
+    esac
+}
+
+# Function to display file information
+file_getinfo() {
+  local file="$1"
+
+  # Check if the file exists
+  if [ ! -e "$file" ]; then
+    echo "Error: File '$file' not found."
+    exit 1
+  fi
+
+  # Display general file information
+  echo "File: $file"
+  echo "Access: $(stat -c %A "$file")"
+  echo "Size(B): $(stat -c %s "$file")"
+  echo "Owner: $(stat -c %U "$file")"
+  echo "Modify: $(stat -c %y "$file")"
+}
+
+# Function to display help for file getinfo command
+file_getinfo_help() {
+  echo "Usage: internsctl file getinfo [options] <file-name>"
+  echo "Options:"
+  echo "  --size, -s           Print file size"
+  echo "  --permissions, -p   Print file permissions"
+  echo "  --owner, -o          Print file owner"
+  echo "  --last-modified, -m Print last modified time"
+}
+
+# Parse command-line arguments for file getinfo command
+parse_file_getinfo() {
+  local size=false
+  local permissions=false
+  local owner=false
+  local last_modified=false
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --size | -s) size=true ;;
+      --permissions | -p) permissions=true ;;
+      --owner | -o) owner=true ;;
+      --last-modified | -m) last_modified=true ;;
+      --help) file_getinfo_help; exit 0 ;;
+      *) file_getinfo "$1"; shift ;;
+    esac
+    shift
+  done
+
+  if [ "$size" == true ]; then
+    stat -c%s "$file"
+  fi
+
+  if [ "$permissions" == true ]; then
+    stat -c%a "$file"
+  fi
+
+  if [ "$owner" == true ]; then
+    stat -c%U "$file"
+  fi
+
+  if [ "$last_modified" == true ]; then
+    stat -c%y "$file"
+  fi
+}
+
+  
+
+# Parse command-line arguments
+case "$1" in
+    cpu) get_cpu_info ;;
+    memory) get_memory_info ;;
+    user) handle_user_command "$2" "$3" ;;
+    file) if [ "$1" == "file" ] && [ "$2" == "getinfo" ]; then
+  shift 2
+  parse_file_getinfo "$@"
+else
+  echo "Error: Invalid command. Use 'internsctl file getinfo --help' for usage."
+  exit 1
+fi ;;
+    --help) display_manual ;;
+    --version) echo "internsctl $VERSION" ;;
+    *) echo "Error: Unknown command. Use 'internsctl --help' for usage." && exit 1 ;;
+    
+esac
+
+exit 0
+
